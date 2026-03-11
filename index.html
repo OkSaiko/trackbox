@@ -1,515 +1,805 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-  <title>TrackBox</title>
-  <script src="https://telegram.org/js/telegram-web-app.js"><\/script>
-  <style>
-    * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-    :root {
-      --bg: #0a0a0f;
-      --surface: #13131a;
-      --surface2: #1a1a24;
-      --accent: #7c5cfc;
-      --accent2: #fc5c7d;
-      --text: #ffffff;
-      --text2: #8888aa;
-      --border: #ffffff12;
-      --radius: 16px;
-    }
-    html, body { height:100%; background:var(--bg); color:var(--text); font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; overflow:hidden; }
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<title>TrackBox</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#000;--s1:#111;--s2:#181818;--s3:#242424;--s4:#2a2a2a;
+  --bd:rgba(255,255,255,.07);
+  --gr:#1db954;--gr2:#1ed760;
+  --tx:#fff;--mu:#a7a7a7;--mu2:#535353;
+  --rd:#e91429;
+  --nav:60px;--bar:70px;
+}
+html,body{height:100%;background:var(--bg);color:var(--tx);font-family:'Inter',sans-serif;overflow:hidden;-webkit-font-smoothing:antialiased;font-size:14px}
+::-webkit-scrollbar{display:none}
+svg{display:block;flex-shrink:0}
 
-    /* ── APP SHELL ── */
-    #app { display:flex; flex-direction:column; height:100vh; height:100dvh; }
+/* ─ SHELL ─ */
+#app{display:flex;flex-direction:column;height:100dvh}
+#scroll{flex:1;overflow-y:auto;padding-bottom:calc(var(--bar) + var(--nav) + 12px)}
 
-    /* ── HEADER ── */
-    .header {
-      padding: 12px 16px 8px;
-      display: flex; align-items: center; justify-content: space-between;
-      background: var(--bg);
-      border-bottom: 1px solid var(--border);
-      flex-shrink: 0;
-    }
-    .header-logo { font-size:20px; font-weight:800; letter-spacing:-0.5px; }
-    .header-logo span { background:linear-gradient(135deg,var(--accent),var(--accent2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+/* ─ HEADER ─ */
+.hdr{display:flex;align-items:center;justify-content:space-between;padding:18px 16px 0}
+.logo{font-size:19px;font-weight:900;letter-spacing:-.4px}
+.logo s{color:var(--gr);text-decoration:none;font-style:normal}
+.ava{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#450af5,#8be0a4);border:none;cursor:pointer;font-size:13px;font-weight:800;color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;letter-spacing:-.5px}
 
-    /* ── TABS ── */
-    #tabs {
-      display: flex; gap: 4px; padding: 8px 12px;
-      background: var(--bg); border-bottom: 1px solid var(--border);
-      flex-shrink: 0; overflow-x: auto;
-    }
-    #tabs::-webkit-scrollbar { display:none; }
-    .tab {
-      padding: 6px 14px; border-radius: 20px; font-size:13px; font-weight:600;
-      border: 1px solid var(--border); background: transparent; color: var(--text2);
-      cursor: pointer; white-space: nowrap; transition: all .2s;
-    }
-    .tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+/* ─ CHIPS ─ */
+.chips{display:flex;gap:6px;padding:12px 16px 0;overflow-x:auto;scrollbar-width:none}
+.chip{padding:6px 14px;border-radius:20px;font-size:13px;font-weight:600;white-space:nowrap;cursor:pointer;border:none;background:var(--s2);color:var(--mu);transition:background .15s,color .15s;flex-shrink:0}
+.chip.on{background:var(--tx);color:#000}
 
-    /* ── SEARCH ── */
-    #search-wrap { padding: 8px 12px; flex-shrink:0; display:none; }
-    #search-input {
-      width:100%; padding:10px 14px; border-radius:12px;
-      background:var(--surface2); border:1px solid var(--border);
-      color:var(--text); font-size:15px; outline:none;
-    }
-    #search-input::placeholder { color:var(--text2); }
+/* ─ SEARCH ─ */
+.sw{padding:10px 16px 0;display:none}
+.sb{display:flex;align-items:center;gap:8px;background:var(--s2);border-radius:4px;padding:10px 12px}
+.sb input{flex:1;background:none;border:none;outline:none;color:var(--tx);font-family:'Inter',sans-serif;font-size:14px}
+.sb input::placeholder{color:var(--mu2)}
 
-    /* ── SECTION TITLE ── */
-    #section-title {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 10px 16px 4px; font-size:13px; font-weight:700;
-      color:var(--text2); text-transform:uppercase; letter-spacing:.5px; flex-shrink:0;
-    }
-    #section-title span { font-weight:400; font-size:12px; }
+/* ─ SECTION LABEL ─ */
+.slbl{display:flex;justify-content:space-between;align-items:center;padding:14px 16px 6px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--mu2)}
+.slbl em{font-style:normal;font-weight:500;font-size:12px;color:var(--mu);text-transform:none;letter-spacing:0}
 
-    /* ── PAGES ── */
-    .page { display:none; flex:1; overflow-y:auto; }
-    .page.active { display:flex; flex-direction:column; }
-    .page::-webkit-scrollbar { display:none; }
+/* ─ TRACK ROW ─ */
+.tr{display:flex;align-items:center;gap:12px;padding:8px 16px;cursor:pointer;transition:background .1s;position:relative}
+.tr:active{background:var(--s3)}
+.tr.pl .tt{color:var(--gr)}
 
-    /* ── TRACK LIST ── */
-    #track-list { padding: 4px 8px 100px; }
+/* cover */
+.tc{width:48px;height:48px;border-radius:3px;flex-shrink:0;position:relative;overflow:hidden;background:var(--s2)}
+.tc .bg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
+.tc img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:3px;display:none}
+.tov{position:absolute;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .12s;border-radius:3px}
+.tr:active .tov,.tr.pl .tov{opacity:1}
 
-    .track-card {
-      display:flex; align-items:center; gap:12px;
-      padding:10px 10px; border-radius:var(--radius);
-      cursor:pointer; transition:background .15s; margin-bottom:2px;
-    }
-    .track-card:active, .track-card.playing { background:var(--surface2); }
+/* eq bars */
+.eq{display:flex;align-items:flex-end;gap:2px;height:14px}
+.eq b{width:3px;background:var(--gr);border-radius:1px;display:block}
+.eq b:nth-child(1){animation:e1 .9s ease-in-out infinite alternate}
+.eq b:nth-child(2){animation:e2 .65s ease-in-out infinite alternate}
+.eq b:nth-child(3){animation:e3 1.1s ease-in-out infinite alternate}
+@keyframes e1{0%{height:3px}100%{height:13px}}
+@keyframes e2{0%{height:11px}100%{height:4px}}
+@keyframes e3{0%{height:5px}100%{height:11px}}
 
-    .track-cover {
-      width:46px; height:46px; border-radius:12px; flex-shrink:0;
-      background:linear-gradient(135deg,var(--accent),var(--accent2));
-      display:flex; align-items:center; justify-content:center; font-size:20px;
-    }
-    .track-cover.playing-anim { animation: pulse 1.5s ease-in-out infinite; }
-    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.6} }
+/* info */
+.ti{flex:1;min-width:0}
+.tt{font-size:15px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:color .12s}
+.ta{font-size:13px;color:var(--mu);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
-    .track-info { flex:1; min-width:0; }
-    .track-title { font-size:15px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-    .track-artist { font-size:13px; color:var(--text2); margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+/* right */
+.trr{display:flex;align-items:center;gap:4px;flex-shrink:0}
+.ib{background:none;border:none;cursor:pointer;padding:7px;color:var(--mu2);display:flex;align-items:center;justify-content:center;border-radius:50%;transition:color .12s,transform .1s}
+.ib:active{transform:scale(.82)}
+.ib.lk svg{stroke:var(--rd);fill:var(--rd)}
+.ib.bx svg{stroke:var(--gr)}
+.tn{font-size:12px;color:var(--mu2);min-width:20px;text-align:right;font-weight:500}
 
-    .track-meta { display:flex; flex-direction:column; align-items:flex-end; gap:4px; flex-shrink:0; }
-    .like-btn {
-      background:none; border:none; color:var(--text2); font-size:13px;
-      cursor:pointer; padding:2px 6px; border-radius:8px; transition:all .15s;
-    }
-    .like-btn.liked { color:var(--accent2); }
-    .track-num { font-size:12px; color:var(--text2); font-weight:600; }
+/* skeleton */
+.sk{background:linear-gradient(90deg,var(--s2) 0%,var(--s3) 50%,var(--s2) 100%);background-size:300%;animation:shimmer 1.5s infinite;border-radius:3px}
+@keyframes shimmer{0%{background-position:100%}100%{background-position:-100%}}
 
-    .playing-bars { display:flex; gap:2px; align-items:flex-end; height:14px; }
-    .bar {
-      width:3px; background:var(--accent); border-radius:2px;
-      animation: bar-anim 0.8s ease-in-out infinite;
-    }
-    .bar:nth-child(2) { animation-delay:.2s; }
-    .bar:nth-child(3) { animation-delay:.4s; }
-    @keyframes bar-anim { 0%,100%{height:4px} 50%{height:14px} }
+/* empty */
+.mt{padding:64px 24px;text-align:center}
+.mt svg{opacity:.2;margin:0 auto 16px}
+.mt h3{font-size:17px;font-weight:700;margin-bottom:6px}
+.mt p{font-size:13px;color:var(--mu)}
 
-    .empty { text-align:center; padding:60px 20px; color:var(--text2); }
-    .empty-icon { font-size:48px; margin-bottom:12px; }
-    .empty-text { font-size:17px; font-weight:600; color:var(--text); margin-bottom:6px; }
-    .empty-sub { font-size:14px; }
+/* ─ NOW PLAYING BAR ─ */
+#bar{
+  position:fixed;left:8px;right:8px;bottom:calc(var(--nav)+8px);
+  height:var(--bar);z-index:40;background:var(--s2);border-radius:8px;
+  display:flex;align-items:center;padding:0 8px 0 10px;gap:10px;
+  transform:translateY(calc(100% + var(--nav) + 16px));
+  transition:transform .32s cubic-bezier(.4,0,.2,1);
+  cursor:pointer;box-shadow:0 8px 32px rgba(0,0,0,.7);overflow:hidden;
+}
+#bar.on{transform:translateY(0)}
+#bprog{position:absolute;bottom:0;left:0;right:0;height:2px;background:rgba(255,255,255,.08)}
+#bfill{height:100%;background:var(--gr);width:0%;transition:width .35s linear;border-radius:1px}
+#bcov{width:48px;height:48px;border-radius:3px;flex-shrink:0;background:var(--s3);display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative}
+#bcov img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:3px;display:none}
+#bi{flex:1;min-width:0}
+#bt{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#ba{font-size:12px;color:var(--mu);margin-top:2px}
+#bbtns{display:flex;align-items:center}
+.bb{width:36px;height:36px;border:none;background:none;cursor:pointer;color:var(--mu);display:flex;align-items:center;justify-content:center;border-radius:50%;transition:color .12s,transform .1s}
+.bb:active{color:var(--tx);transform:scale(.85)}
+#bpl{width:40px;height:40px;background:var(--tx);border-radius:50%;color:#000}
+#bpl:active{transform:scale(.9)}
+#blk.lk svg{stroke:var(--rd);fill:var(--rd)}
 
-    /* ── NOW PLAYING ── */
-    #now-playing {
-      position:fixed; bottom:60px; left:8px; right:8px;
-      background:var(--surface); border:1px solid var(--border);
-      border-radius:var(--radius); padding:10px 14px;
-      display:flex; align-items:center; gap:10px;
-      transform:translateY(120%); transition:transform .3s cubic-bezier(.34,1.56,.64,1);
-      z-index:100; box-shadow:0 8px 32px #0008;
-    }
-    #now-playing.visible { transform:translateY(0); }
-    #np-cover {
-      width:38px; height:38px; border-radius:10px; flex-shrink:0;
-      background:linear-gradient(135deg,var(--accent),var(--accent2));
-      display:flex; align-items:center; justify-content:center; font-size:18px;
-    }
-    #np-info { flex:1; min-width:0; }
-    #np-title { font-size:14px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-    #np-artist { font-size:12px; color:var(--text2); }
-    .np-controls { display:flex; gap:6px; align-items:center; }
-    .np-btn {
-      background:none; border:none; color:var(--text); font-size:20px;
-      cursor:pointer; padding:4px; border-radius:8px; transition:opacity .15s;
-    }
-    .np-btn:active { opacity:.6; }
-    #np-play-btn { font-size:24px; }
+/* ─ BOTTOM NAV ─ */
+#nav{
+  position:fixed;bottom:0;left:0;right:0;height:var(--nav);z-index:50;
+  background:var(--s1);border-top:1px solid var(--bd);
+  display:flex;align-items:center;justify-content:space-around;
+  padding-bottom:env(safe-area-inset-bottom,0);
+}
+.ni{display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;padding:6px 16px;opacity:.5;transition:opacity .15s;background:none;border:none}
+.ni.on{opacity:1}
+.ni span{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--mu2)}
+.ni.on span{color:var(--tx)}
+.ni svg{transition:transform .15s}
+.ni.on svg{transform:scale(1.1)}
 
-    /* ── PROFILE PAGE ── */
-    #page-profile { padding:16px; gap:12px; }
-    .profile-header {
-      background:var(--surface); border-radius:var(--radius); padding:20px;
-      display:flex; align-items:center; gap:14px;
-    }
-    .profile-avatar {
-      width:60px; height:60px; border-radius:50%; flex-shrink:0;
-      background:linear-gradient(135deg,var(--accent),var(--accent2));
-      display:flex; align-items:center; justify-content:center; font-size:28px;
-    }
-    .profile-name { font-size:18px; font-weight:700; }
-    .profile-handle { font-size:14px; color:var(--text2); margin-top:2px; }
+/* ─ FULL PLAYER ─ */
+#pl{
+  position:fixed;inset:0;z-index:80;
+  transform:translateY(100%);transition:transform .36s cubic-bezier(.4,0,.2,1);
+  display:flex;flex-direction:column;overflow:hidden;background:var(--bg);
+}
+#pl.on{transform:translateY(0)}
+#plbg{position:absolute;inset:0;opacity:.15;filter:blur(90px);transition:background .5s;pointer-events:none}
+#plin{position:relative;z-index:1;display:flex;flex-direction:column;height:100%;padding:0 22px 22px}
 
-    .stats-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
-    .stat-card {
-      background:var(--surface); border-radius:var(--radius); padding:14px;
-      text-align:center;
-    }
-    .stat-value { font-size:24px; font-weight:800; }
-    .stat-label { font-size:12px; color:var(--text2); margin-top:2px; }
+/* player header */
+#plhdr{display:flex;align-items:center;justify-content:space-between;padding:18px 0 14px;flex-shrink:0}
+.phb{width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.08);border:none;cursor:pointer;color:var(--mu);display:flex;align-items:center;justify-content:center}
+#phlbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--mu)}
 
-    .section-header { font-size:13px; font-weight:700; color:var(--text2); text-transform:uppercase; letter-spacing:.5px; margin-top:4px; }
+/* cover */
+#plcw{width:100%;aspect-ratio:1;max-height:40vh;border-radius:10px;overflow:hidden;margin-bottom:20px;flex-shrink:0;box-shadow:0 20px 60px rgba(0,0,0,.8);display:flex;align-items:center;justify-content:center;background:var(--s2);position:relative}
+#plci{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none;border-radius:10px}
+#plcfb{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
 
-    #ach-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; padding-bottom:80px; }
-    .ach-card {
-      background:var(--surface); border-radius:var(--radius); padding:14px;
-      text-align:center; border:1px solid var(--border);
-    }
-    .ach-card.locked { opacity:.5; }
-    .ach-emoji { font-size:28px; margin-bottom:6px; }
-    .ach-name { font-size:13px; font-weight:700; margin-bottom:4px; }
-    .ach-desc { font-size:11px; color:var(--text2); margin-bottom:6px; }
-    .ach-badge { font-size:11px; color:var(--text2); }
+/* meta */
+#plmeta{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px;gap:10px;flex-shrink:0}
+#plml{flex:1;min-width:0}
+#pltitle{font-size:22px;font-weight:800;letter-spacing:-.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#plart{font-size:15px;color:var(--mu);margin-top:5px}
+.pmb{width:42px;height:42px;background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:transform .1s;color:var(--mu);padding:4px}
+.pmb:active{transform:scale(1.2)}
+#pllk.lk svg{stroke:var(--rd);fill:var(--rd)}
+#plbx.on svg{stroke:var(--gr)}
 
-    /* ── BOTTOM NAV ── */
-    #nav {
-      display:flex; background:var(--surface); border-top:1px solid var(--border);
-      flex-shrink:0; z-index:200;
-    }
-    .nav-item {
-      flex:1; display:flex; flex-direction:column; align-items:center;
-      padding:8px 4px 10px; cursor:pointer; transition:color .15s;
-      color:var(--text2); font-size:10px; gap:3px; border:none; background:none;
-    }
-    .nav-item.active { color:var(--accent); }
-    .nav-icon { font-size:22px; }
+/* progress */
+#plpa{margin-bottom:12px;flex-shrink:0}
+#plpt{height:4px;background:rgba(255,255,255,.12);border-radius:2px;cursor:pointer;position:relative;touch-action:none}
+#plpf{height:100%;background:var(--tx);border-radius:2px;width:0%;pointer-events:none;position:relative}
+#plpf::after{content:'';position:absolute;right:-6px;top:50%;transform:translateY(-50%);width:12px;height:12px;background:var(--tx);border-radius:50%;opacity:0;transition:opacity .15s}
+#plpt:hover #plpf::after,#plpt.drag #plpf::after{opacity:1}
+.pltimes{display:flex;justify-content:space-between;font-size:11px;color:var(--mu2);font-weight:600;margin-top:7px}
 
-    /* ── TOAST ── */
-    #toast {
-      position:fixed; bottom:80px; left:50%; transform:translateX(-50%) translateY(20px);
-      background:#222233; color:#fff; padding:8px 18px; border-radius:20px;
-      font-size:13px; opacity:0; transition:all .25s; z-index:999; white-space:nowrap;
-      pointer-events:none;
-    }
-    #toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
-  </style>
+/* controls */
+#plctrl{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-shrink:0}
+.pcb{background:none;border:none;cursor:pointer;color:var(--mu);width:48px;height:48px;display:flex;align-items:center;justify-content:center;border-radius:50%;transition:opacity .12s,transform .1s}
+.pcb:active{opacity:.5;transform:scale(.88)}
+#plpl{width:60px;height:60px;background:var(--tx);border-radius:50%;color:#000;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 24px rgba(0,0,0,.5);transition:transform .1s}
+#plpl:active{transform:scale(.93)}
+
+/* volume */
+#plvol{display:flex;align-items:center;gap:10px;flex-shrink:0;margin-bottom:12px}
+#plvol svg{flex-shrink:0;color:var(--mu2)}
+#volr{flex:1;-webkit-appearance:none;appearance:none;height:4px;border-radius:2px;background:rgba(255,255,255,.12);outline:none;cursor:pointer}
+#volr::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--tx);cursor:pointer}
+#volr::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:var(--tx);border:none;cursor:pointer}
+
+/* lyrics button */
+#lyrb{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:12px;background:rgba(255,255,255,.06);border:none;border-radius:6px;color:var(--mu);font-size:14px;font-weight:600;cursor:pointer;transition:background .15s,color .15s;font-family:'Inter',sans-serif;flex-shrink:0}
+#lyrb:active{background:rgba(255,255,255,.11);color:var(--tx)}
+
+/* ─ LYRICS SHEET ─ */
+#lyr{position:fixed;inset:0;z-index:90;background:var(--bg);transform:translateY(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column}
+#lyr.on{transform:translateY(0)}
+#lyrhdr{display:flex;align-items:center;gap:12px;padding:18px 16px 14px;border-bottom:1px solid var(--bd);flex-shrink:0}
+#lyrtitle{flex:1;min-width:0}
+#lyrtitle strong{font-size:15px;font-weight:700;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#lyrtitle span{font-size:13px;color:var(--mu)}
+#lyrx{width:30px;height:30px;border-radius:50%;background:var(--s2);border:none;color:var(--mu);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+#lyrbody{flex:1;overflow-y:auto;padding:22px 20px 40px}
+#lyrtext{font-size:16px;line-height:1.95;color:var(--mu);white-space:pre-wrap;word-break:break-word}
+.lyrph{display:flex;flex-direction:column;align-items:center;justify-content:center;height:220px;gap:10px;color:var(--mu2);text-align:center}
+.lyrph svg{opacity:.2}
+.lyrph strong{font-size:15px;font-weight:600;color:var(--mu)}
+.lyrph small{font-size:12px}
+
+/* ─ PROFILE ─ */
+#ppro{display:none}
+.protop{padding:28px 20px 20px;background:linear-gradient(180deg,#1a1a2e 0%,transparent 100%);display:flex;flex-direction:column;align-items:center}
+.propic{width:86px;height:86px;border-radius:50%;background:linear-gradient(135deg,#450af5,#8be0a4);display:flex;align-items:center;justify-content:center;font-size:36px;font-weight:900;margin-bottom:14px;box-shadow:0 8px 32px rgba(69,10,245,.4)}
+.proname{font-size:23px;font-weight:900;letter-spacing:-.3px}
+.prohnd{font-size:14px;color:var(--mu);margin-top:4px}
+.prost{display:flex;width:100%;margin-top:18px;background:var(--s2);border-radius:6px;overflow:hidden;border:1px solid var(--bd)}
+.ps{flex:1;padding:13px 8px;text-align:center;border-right:1px solid var(--bd)}
+.ps:last-child{border-right:none}
+.psv{font-size:20px;font-weight:900;color:var(--gr)}
+.psl{font-size:10px;color:var(--mu2);margin-top:3px;text-transform:uppercase;letter-spacing:.5px}
+.achs{padding:16px 16px 32px}
+.achst{font-size:16px;font-weight:800;margin-bottom:12px}
+.achg{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.ac{background:var(--s2);border:1px solid var(--bd);border-radius:6px;padding:13px}
+.ac.y{border-color:rgba(29,185,84,.3);background:rgba(29,185,84,.05)}
+.ac.n{opacity:.4}
+.ace{font-size:24px;margin-bottom:8px}
+.acn{font-size:12px;font-weight:700;line-height:1.3}
+.acd{font-size:11px;color:var(--mu2);margin-top:3px;line-height:1.4}
+.acs{font-size:11px;font-weight:700;margin-top:8px;color:var(--mu2)}
+.ac.y .acs{color:var(--gr)}
+
+/* ─ TOAST ─ */
+#toast{position:fixed;top:14px;left:50%;transform:translateX(-50%) translateY(-60px);background:var(--s2);border:1px solid rgba(255,255,255,.1);color:var(--tx);padding:9px 18px;border-radius:99px;font-size:13px;font-weight:600;white-space:nowrap;z-index:200;transition:transform .3s cubic-bezier(.34,1.56,.64,1);pointer-events:none;max-width:88vw;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,.6)}
+#toast.on{transform:translateX(-50%) translateY(0)}
+
+@keyframes fi{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.tr{animation:fi .2s ease both}
+</style>
 </head>
 <body>
 <div id="app">
+<div id="scroll">
 
-  <!-- HEADER -->
-  <div class="header">
-    <div class="header-logo">Track<span>Box</span></div>
-  </div>
-
-  <!-- TABS -->
-  <div id="tabs">
-    <button class="tab active" onclick="switchTab('new', this)">🔥 Новинки</button>
-    <button class="tab" onclick="switchTab('top', this)">⭐ Топ</button>
-    <button class="tab" onclick="switchTab('box', this)">📦 Мой ящик</button>
-    <button class="tab" onclick="switchTab('search', this)">🔍 Поиск</button>
-  </div>
-
-  <!-- SEARCH -->
-  <div id="search-wrap">
-    <input id="search-input" type="text" placeholder="Поиск треков и артистов..."
-      oninput="onSearch(this.value)"/>
-  </div>
-
-  <!-- SECTION TITLE -->
-  <div id="section-title">🔥 НОВИНКИ <span>загрузка...</span></div>
-
-  <!-- HOME PAGE -->
-  <div id="page-home" class="page active">
-    <div id="track-list"></div>
-  </div>
-
-  <!-- PROFILE PAGE -->
-  <div id="page-profile" class="page">
-    <div class="profile-header">
-      <div class="profile-avatar">🎵</div>
-      <div>
-        <div class="profile-name" id="p-name">TrackBox User</div>
-        <div class="profile-handle" id="p-handle">@user</div>
+  <!-- HOME -->
+  <div id="phome">
+    <div class="hdr">
+      <div class="logo">Track<s>Box</s></div>
+      <button class="ava" id="ava" onclick="nav('profile')">?</button>
+    </div>
+    <div class="chips">
+      <button class="chip on"  onclick="tab('new',this)">Новинки</button>
+      <button class="chip"     onclick="tab('top',this)">Топ</button>
+      <button class="chip"     onclick="tab('box',this)">Мой ящик</button>
+      <button class="chip"     onclick="tab('search',this)">Поиск</button>
+    </div>
+    <div class="sw" id="sw">
+      <div class="sb">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#535353" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input id="si" type="text" placeholder="Исполнитель или название..."/>
       </div>
     </div>
-
-    <div class="stats-grid">
-      <div class="stat-card">
-        <div class="stat-value" id="p-listens">0</div>
-        <div class="stat-label">Прослушано</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-value" id="p-likes">0</div>
-        <div class="stat-label">Лайков</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-value" id="p-box">0</div>
-        <div class="stat-label">В ящике</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-value" id="p-days">—</div>
-        <div class="stat-label">Дней с нами</div>
-      </div>
-    </div>
-
-    <div class="section-header">🏆 Достижения</div>
-    <div id="ach-grid"></div>
+    <div class="slbl" id="slbl"><span id="st">НОВИНКИ</span><em id="sc"></em></div>
+    <div id="tl"></div>
   </div>
 
-  <!-- NOW PLAYING -->
-  <div id="now-playing">
-    <div id="np-cover">🎵</div>
-    <div id="np-info">
-      <div id="np-title">—</div>
-      <div id="np-artist">—</div>
+  <!-- PROFILE -->
+  <div id="ppro">
+    <div class="protop">
+      <div class="propic" id="ppic">?</div>
+      <div class="proname" id="pname">Загрузка...</div>
+      <div class="prohnd" id="phnd">@trackbox</div>
+      <div class="prost">
+        <div class="ps"><div class="psv" id="pls">—</div><div class="psl">Треков</div></div>
+        <div class="ps"><div class="psv" id="plk">—</div><div class="psl">Лайков</div></div>
+        <div class="ps"><div class="psv" id="pbx">—</div><div class="psl">В ящике</div></div>
+      </div>
     </div>
-    <div class="np-controls">
-      <button class="np-btn" onclick="prevTrack()">⏮</button>
-      <button class="np-btn" id="np-play-btn" onclick="togglePlay()">⏸</button>
-      <button class="np-btn" onclick="nextTrack()">⏭</button>
-    </div>
+    <div class="achs"><div class="achst">Достижения</div><div class="achg" id="achg"></div></div>
   </div>
 
-  <!-- BOTTOM NAV -->
-  <div id="nav">
-    <button class="nav-item active" id="nav-home" onclick="showPage('home')">
-      <span class="nav-icon">🏠</span>Главная
+</div><!-- /scroll -->
+
+<!-- NOW PLAYING BAR -->
+<div id="bar" onclick="openPl()">
+  <div id="bcov">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-opacity=".3"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+    <img id="bcimg" src="" alt=""/>
+  </div>
+  <div id="bi">
+    <div id="bt">Ничего не играет</div>
+    <div id="ba">—</div>
+  </div>
+  <div id="bbtns" onclick="event.stopPropagation()">
+    <button class="bb" id="blk" onclick="likeCur()" title="Лайк">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
     </button>
-    <button class="nav-item" id="nav-search" onclick="showPage('search')">
-      <span class="nav-icon">🔍</span>Поиск
+    <button class="bb" onclick="prev()" title="Назад">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor"><polygon points="19 20 9 12 19 4 19 20"/><rect x="4" y="4" width="3" height="16" rx="1"/></svg>
     </button>
-    <button class="nav-item" id="nav-box" onclick="showPage('box')">
-      <span class="nav-icon">📦</span>Ящик
+    <button class="bb" id="bpl" onclick="togglePlay()" title="Play/Pause">
+      <svg id="bpico" width="19" height="19" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
     </button>
-    <button class="nav-item" id="nav-profile" onclick="showPage('profile')">
-      <span class="nav-icon">👤</span>Профиль
+    <button class="bb" onclick="next()" title="Вперёд">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 4 15 12 5 20 5 4"/><rect x="17" y="4" width="3" height="16" rx="1"/></svg>
     </button>
   </div>
+  <div id="bprog"><div id="bfill"></div></div>
+</div>
 
+<!-- BOTTOM NAV -->
+<div id="nav">
+  <button class="ni on" id="nih" onclick="nav('home')">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    <span>Главная</span>
+  </button>
+  <button class="ni" id="nis" onclick="nav('search')">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    <span>Поиск</span>
+  </button>
+  <button class="ni" id="nib" onclick="nav('box')">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+    <span>Ящик</span>
+  </button>
+  <button class="ni" id="nip" onclick="nav('profile')">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    <span>Профиль</span>
+  </button>
+</div>
+
+</div><!-- /app -->
+
+<!-- FULL PLAYER -->
+<div id="pl">
+  <div id="plbg"></div>
+  <div id="plin">
+    <div id="plhdr">
+      <button class="phb" onclick="closePl()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+      <span id="phlbl">Сейчас играет</span>
+      <button class="phb" id="plopt">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
+      </button>
+    </div>
+    <div id="plcw">
+      <img id="plci" src="" alt=""/>
+      <div id="plcfb">
+        <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width=".8" stroke-opacity=".15"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+      </div>
+    </div>
+    <div id="plmeta">
+      <div id="plml">
+        <div id="pltitle">—</div>
+        <div id="plart">—</div>
+      </div>
+      <button class="pmb" id="plbx" onclick="boxCur()" title="В ящик">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+      </button>
+      <button class="pmb" id="pllk" onclick="likeCur()" title="Лайк">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+      </button>
+    </div>
+    <div id="plpa">
+      <div id="plpt">
+        <div id="plpf"></div>
+      </div>
+      <div class="pltimes"><span id="plc">0:00</span><span id="pld">0:00</span></div>
+    </div>
+    <div id="plctrl">
+      <button class="pcb" onclick="prev()">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><polygon points="19 20 9 12 19 4 19 20"/><rect x="4" y="4" width="3" height="16" rx="1"/></svg>
+      </button>
+      <button class="pcb" onclick="seekBy(-15)" style="font-size:12px;font-weight:700;color:var(--mu);flex-direction:column;gap:1px">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.82"/></svg>
+        <span style="font-size:10px;font-weight:700;color:var(--mu)">15</span>
+      </button>
+      <button id="plpl" onclick="togglePlay()">
+        <svg id="plpico" width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+      </button>
+      <button class="pcb" onclick="seekBy(15)" style="flex-direction:column;gap:1px">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-.49-3.82"/></svg>
+        <span style="font-size:10px;font-weight:700;color:var(--mu)">15</span>
+      </button>
+      <button class="pcb" onclick="next()">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 4 15 12 5 20 5 4"/><rect x="17" y="4" width="3" height="16" rx="1"/></svg>
+      </button>
+    </div>
+    <div id="plvol">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/></svg>
+      <input type="range" id="volr" min="0" max="1" step="0.02" value="1"/>
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+    </div>
+    <button id="lyrb" onclick="openLyr()">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      Текст песни
+    </button>
+  </div>
+</div>
+
+<!-- LYRICS -->
+<div id="lyr">
+  <div id="lyrhdr">
+    <div id="lyrtitle"><strong id="lyrt">—</strong><span id="lyra"></span></div>
+    <button id="lyrx" onclick="closeLyr()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+  <div id="lyrbody"><div id="lyrtext"></div></div>
 </div>
 
 <!-- TOAST -->
 <div id="toast"></div>
 
 <script>
-// ── Telegram WebApp init ────
+// ─ TELEGRAM ──────────────────────────────────────────────────
 const tg = window.Telegram?.WebApp;
-if (tg) {
-  tg.ready();
-  tg.expand();
-  tg.setHeaderColor('#0a0a0f');
-  tg.setBackgroundColor('#0a0a0f');
-}
+if (tg) { tg.ready(); tg.expand(); tg.setHeaderColor('#000000'); tg.setBackgroundColor('#000000'); }
+const TGU = tg?.initDataUnsafe?.user;
+const UID = TGU?.id || null;
 
-const API = "https://hypnotisable-mistier-tessa.ngrok-free.dev";
-const TG_USER = tg?.initDataUnsafe?.user;
+// ─ CONFIG ─────────────────────────────────────────────────────
+const API = "https://hypnotisable-mistier-tessa.ngrok-free.dev"; // ← замени на актуальный ngrok
 
-// ── state ────
-let currentPage  = 'home';
-let currentTab   = 'new';
-let playingId    = null;
-let isPlaying    = false;
-let tracks       = [];
-let myBox        = [];
-let currentAudio = null;
+// ─ COVER COLORS ───────────────────────────────────────────────
+const COLS = ['#1db954','#e91429','#509bf5','#ff6437','#b49bc8','#8400e7','#2d46b9','#e8115b','#f59b23','#e13300','#148a08','#eb1e32','#0d73ec','#ba5d07','#477d95'];
+const col  = id => COLS[id % COLS.length];
+const grad = id => `linear-gradient(160deg, ${col(id)}33 0%, #0a0a0a 100%)`;
 
-const ACHIEVEMENTS = [
-  { id:"listen_10",    emoji:"🎧", name:"Только начало!",         desc:"Прослушать 10 треков"      },
-  { id:"likes_10",     emoji:"❤️", name:"Мне нравится!",          desc:"Поставить 10 лайков"       },
-  { id:"box_10",       emoji:"📦", name:"Теперь это моё!",        desc:"Добавить 10 треков в ящик" },
-  { id:"suggest_5",    emoji:"📤", name:"Прочее → Поделиться...", desc:"Отправить 5 заявок"        },
-  { id:"listen_50",    emoji:"🎵", name:"Музыка — моё всё!",      desc:"Прослушать 50 треков"      },
-  { id:"likes_50",     emoji:"💖", name:"Я выбираю тебя!",        desc:"Поставить 50 лайков"       },
-  { id:"box_50",       emoji:"🗃", name:"Цените мой выбор!",      desc:"Добавить 50 треков в ящик" },
-  { id:"donate_small", emoji:"💝", name:"Вип-персона!",           desc:"Пожертвовать 10-50 звёзд"  },
+// ─ ACHIEVEMENTS ──────────────────────────────────────────────
+const ACH = [
+  {id:'listen_10',  e:'🎧',n:'Только начало!',              d:'Прослушать 10 треков'},
+  {id:'likes_10',   e:'❤️',n:'Мне нравится!',               d:'Поставить 10 лайков'},
+  {id:'box_10',     e:'📦',n:'Теперь это моё!',             d:'10 треков в ящике'},
+  {id:'suggest_5',  e:'📤',n:'Прочее → Поделиться...',      d:'5 заявок'},
+  {id:'listen_50',  e:'🎵',n:'Музыка — моё всё!',           d:'Прослушать 50 треков'},
+  {id:'likes_50',   e:'💖',n:'Я выбираю тебя!',             d:'Поставить 50 лайков'},
+  {id:'box_50',     e:'🗃️',n:'Цените мой выбор!',           d:'50 треков в ящике'},
+  {id:'suggest_15', e:'📬',n:'Ну добавьте, молю!',          d:'15 заявок'},
+  {id:'listen_100', e:'🏆',n:'Я здесь надолго!',            d:'Прослушать 100 треков'},
+  {id:'likes_100',  e:'💎',n:'ЭТО ИДЕАЛЬНО!',               d:'100 лайков'},
+  {id:'box_100',    e:'👑',n:'Всё принадлежит мне!',        d:'100 треков в ящике'},
+  {id:'suggest_30', e:'🌟',n:'Самый щедрый!',               d:'30 заявок'},
+  {id:'donate_small',e:'💝',n:'Вип-персона!',               d:'10–50 ⭐'},
+  {id:'donate_mid', e:'💰',n:'Богатый, но добрый!',         d:'100 ⭐'},
+  {id:'donate_big', e:'🚀',n:'Исторический момент!',        d:'250–500 ⭐'},
 ];
 
-async function apiFetch(path) {
+// ─ STATE ──────────────────────────────────────────────────────
+let tracks = [], liked = new Set(), boxed = new Set();
+let curTab = 'new', nowId = null, playing = false, aud = null;
+const covCache = {};
+
+// ─ API ─────────────────────────────────────────────────────────
+const apiFetch = async (path, method = 'GET') => {
   try {
-    const res = await fetch(API + path, { headers: { "ngrok-skip-browser-warning": "true" } });
-    return await res.json();
-  } catch (e) { console.error("API error:", e); return null; }
+    const r = await fetch(API + path, { method, headers: { 'ngrok-skip-browser-warning': 'true' } });
+    return r.ok ? r.json() : null;
+  } catch { return null; }
+};
+
+// ─ BOOT ───────────────────────────────────────────────────────
+async function boot() {
+  if (TGU) {
+    const ini = (TGU.first_name?.[0] || '?').toUpperCase();
+    document.getElementById('ava').textContent = ini;
+  }
+  showSkel();
+  const [td, ld, bd] = await Promise.all([
+    apiFetch('/tracks?per_page=200'),
+    UID ? apiFetch(`/users/${UID}/likes`)    : null,
+    UID ? apiFetch(`/users/${UID}/box/ids`)  : null,
+  ]);
+  if (!td) { toast('❌ Нет связи с сервером'); hideSkel(); return; }
+  tracks = td.tracks.map(t => ({ ...t, performer: t.performer || 'Unknown' }));
+  if (ld?.liked_ids) liked = new Set(ld.liked_ids);
+  if (bd?.box_ids)   boxed = new Set(bd.box_ids);
+  g$('sc').textContent = tracks.length + ' треков';
+  render(tracks);
 }
 
-async function loadTracks() {
-  showToast("⏳ Загружаем треки...");
-  const data = await apiFetch("/tracks?per_page=50");
-  if (!data) { showToast("❌ Нет связи с сервером"); return; }
+// ─ SKELETON ───────────────────────────────────────────────────
+function showSkel() {
+  g$('tl').innerHTML = Array(7).fill(0).map((_,i) => `
+    <div class="tr" style="animation-delay:${i*.03}s">
+      <div class="tc sk"></div>
+      <div class="ti">
+        <div class="sk" style="height:14px;width:${55+rnd(30)}%;margin-bottom:8px"></div>
+        <div class="sk" style="height:12px;width:${25+rnd(18)}%"></div>
+      </div>
+    </div>`).join('');
+}
+function hideSkel() { g$('tl').innerHTML = ''; }
+const rnd = n => Math.floor(Math.random() * n);
 
-  tracks = await Promise.all(data.tracks.map(async (t) => {
-    const likesData = await apiFetch(`/tracks/${t.id}/likes`);
-    return { ...t, performer: t.performer || "Unknown", likes: likesData?.likes ?? 0, liked: false };
-  }));
+// ─ RENDER ──────────────────────────────────────────────────────
+function render(list) {
+  const el = g$('tl');
+  if (!list.length) {
+    el.innerHTML = `<div class="mt">
+      <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+      <h3>Ничего не найдено</h3><p>Попробуй другой запрос</p></div>`;
+    return;
+  }
+  el.innerHTML = list.map((t, i) => {
+    const pl = t.id === nowId;
+    const lk = liked.has(t.id);
+    const bx = boxed.has(t.id);
+    const ov = pl
+      ? (playing
+          ? `<div class="tov" style="opacity:1"><div class="eq"><b></b><b></b><b></b></div></div>`
+          : `<div class="tov" style="opacity:1"><svg width="14" height="14" viewBox="0 0 24 24" fill="${col(t.id)}"><polygon points="5 3 19 12 5 21 5 3"/></svg></div>`)
+      : `<div class="tov"><svg width="14" height="14" viewBox="0 0 24 24" fill="#fff"><polygon points="5 3 19 12 5 21 5 3"/></svg></div>`;
+    return `
+    <div class="tr${pl?' pl':''}" onclick="play(${t.id})" style="animation-delay:${Math.min(i,10)*.022}s">
+      <div class="tc">
+        <div class="bg" style="background:${grad(t.id)}">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-opacity=".25"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+        </div>
+        <img data-c="${t.id}" src="" alt="" onload="this.style.display='block'" onerror="this.style.display='none'"/>
+        ${ov}
+      </div>
+      <div class="ti">
+        <div class="tt">${esc(t.title)}</div>
+        <div class="ta">${esc(t.performer)}</div>
+      </div>
+      <div class="trr">
+        <button class="ib${lk?' lk':''}" onclick="event.stopPropagation();like(${t.id})" title="Лайк">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        </button>
+        <button class="ib${bx?' bx':''}" onclick="event.stopPropagation();addBox(${t.id})" title="В ящик">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+        </button>
+        <span class="tn">${String(i+1).padStart(2,'0')}</span>
+      </div>
+    </div>`;
+  }).join('');
 
-  document.getElementById('section-title').innerHTML = '🔥 НОВИНКИ <span>' + tracks.length + ' треков</span>';
-  renderTracks([...tracks]);
-  showToast("✅ Загружено " + tracks.length + " треков");
+  // async cover loading
+  list.forEach(t => loadCov(t.id));
 }
 
-function playTrack(id) {
-  const track = tracks.find(t => t.id === id);
-  if (!track) return;
-  if (playingId === id) { togglePlay(); return; }
-  if (currentAudio) { currentAudio.pause(); currentAudio = null; }
-  playingId = id; isPlaying = true;
-  currentAudio = new Audio(`${API}/tracks/${id}/stream`);
-  currentAudio.play().catch(e => { showToast("❌ Ошибка воспроизведения"); console.error(e); });
-  currentAudio.onended = () => nextTrack();
-  document.getElementById('np-title').textContent  = track.title;
-  document.getElementById('np-artist').textContent = track.performer;
-  document.getElementById('np-play-btn').textContent = '⏸';
-  document.getElementById('now-playing').classList.add('visible');
-  refreshCurrentTab();
-  showToast('▶️ ' + track.performer + ' — ' + track.title);
+const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+// ─ COVER LOADING ──────────────────────────────────────────────
+function loadCov(id) {
+  if (covCache[id] === null) return;
+  if (covCache[id]) { applyImg(id, covCache[id]); return; }
+  fetch(`${API}/tracks/${id}/cover`, { headers: { 'ngrok-skip-browser-warning': 'true' } })
+    .then(r => r.ok ? r.blob() : Promise.reject())
+    .then(blob => { const u = URL.createObjectURL(blob); covCache[id] = u; applyImg(id, u); })
+    .catch(() => { covCache[id] = null; });
+}
+function applyImg(id, url) {
+  document.querySelectorAll(`img[data-c="${id}"]`).forEach(i => { i.src = url; });
+  if (nowId === id) {
+    const ci = g$('plci'); ci.src = url; ci.style.display = 'block';
+    const bi = g$('bcimg'); bi.src = url; bi.style.display = 'block';
+    g$('plbg').style.background = `url(${url}) center/cover`;
+  }
+}
+
+// ─ TABS ────────────────────────────────────────────────────────
+function tab(t, el) {
+  curTab = t;
+  document.querySelectorAll('.chip').forEach(c => c.classList.remove('on'));
+  el.classList.add('on');
+  const sw = g$('sw'), sl = g$('slbl'), st = g$('st'), sc = g$('sc');
+  if (t === 'search') { sw.style.display = 'block'; sl.style.display = 'none'; render(tracks); g$('si').focus(); }
+  else { sw.style.display = 'none'; sl.style.display = 'flex'; }
+  if (t === 'new')    { st.textContent = 'НОВИНКИ'; sc.textContent = tracks.length + ' треков'; render([...tracks]); }
+  else if (t === 'top')    { st.textContent = 'ТОП'; sc.textContent = 'по лайкам'; render([...tracks].sort((a,b) => (b.likes||0)-(a.likes||0))); }
+  else if (t === 'box')    { st.textContent = 'МОЙ ЯЩИК'; const b = tracks.filter(x => boxed.has(x.id)); sc.textContent = b.length + ' треков'; render(b); }
+}
+
+g$('si').addEventListener('input', async e => {
+  const q = e.target.value.trim();
+  if (!q) { render(tracks); return; }
+  const d = await apiFetch(`/tracks/search?q=${encodeURIComponent(q)}`);
+  if (d) render(d.tracks.map(t => ({ ...t, performer: t.performer || 'Unknown' })));
+});
+
+// ─ PLAY ───────────────────────────────────────────────────────
+async function play(id) {
+  const t = tracks.find(x => x.id === id);
+  if (!t) return;
+  if (nowId === id) { togglePlay(); return; }
+  if (aud) { aud.pause(); aud = null; }
+  nowId = id; playing = true;
+  aud = new Audio(`${API}/tracks/${id}/stream`);
+  aud.volume = parseFloat(g$('volr').value);
+  aud.play().catch(() => toast('❌ Ошибка воспроизведения'));
+  aud.addEventListener('ended', next);
+  aud.addEventListener('timeupdate', onProg);
+  aud.addEventListener('loadedmetadata', () => { g$('pld').textContent = fmt(aud.duration); });
+  updBar(t); updPl(t); rerender();
+  if (UID) apiFetch(`/users/${UID}/listen/${id}`, 'POST');
   if (tg) tg.HapticFeedback?.impactOccurred('light');
 }
 
 function togglePlay() {
-  if (!currentAudio) return;
-  isPlaying = !isPlaying;
-  isPlaying ? currentAudio.play() : currentAudio.pause();
-  document.getElementById('np-play-btn').textContent = isPlaying ? '⏸' : '▶️';
+  if (!aud) return;
+  playing = !playing;
+  playing ? aud.play() : aud.pause();
+  setIcons(playing);
+  rerender();
 }
 
-function prevTrack() {
-  const idx = tracks.findIndex(t => t.id === playingId);
-  if (idx > 0) playTrack(tracks[idx - 1].id);
+function prev() { const i = tracks.findIndex(x => x.id === nowId); if (i > 0) play(tracks[i-1].id); }
+function next() { const i = tracks.findIndex(x => x.id === nowId); if (i < tracks.length-1) play(tracks[i+1].id); }
+function seekBy(s) { if (aud) aud.currentTime = Math.max(0, Math.min(aud.duration || 0, aud.currentTime + s)); }
+
+function setIcons(pl) {
+  const p = `<polygon points="5 3 19 12 5 21 5 3"/>`;
+  const u = `<rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/>`;
+  g$('bpico').innerHTML  = pl ? u : p;
+  g$('plpico').innerHTML = pl ? u : p;
 }
 
-function nextTrack() {
-  const idx = tracks.findIndex(t => t.id === playingId);
-  if (idx < tracks.length - 1) playTrack(tracks[idx + 1].id);
+function onProg() {
+  if (!aud?.duration) return;
+  const p = aud.currentTime / aud.duration * 100;
+  g$('bfill').style.width  = p + '%';
+  g$('plpf').style.width   = p + '%';
+  g$('plc').textContent    = fmt(aud.currentTime);
 }
 
-function renderTracks(list, containerId = 'track-list') {
-  const el = document.getElementById(containerId);
-  if (!list.length) {
-    el.innerHTML = `<div class="empty"><div class="empty-icon">🎵</div><div class="empty-text">Треков не найдено</div><div class="empty-sub">Попробуй другой запрос</div></div>`;
-    return;
-  }
-  el.innerHTML = list.map((t, i) => {
-    const playing = t.id === playingId;
-    return `<div class="track-card ${playing ? 'playing' : ''}" onclick="playTrack(${t.id})">
-      <div class="track-cover ${playing ? 'playing-anim' : ''}"><span class="note">🎵</span></div>
-      <div class="track-info">
-        <div class="track-title">${t.title}</div>
-        <div class="track-artist">${t.performer}</div>
-      </div>
-      <div class="track-meta">
-        <button class="like-btn ${t.liked ? 'liked' : ''}" onclick="event.stopPropagation(); toggleLike(${t.id})">
-          ${t.liked ? '❤️' : '🤍'} ${t.likes}
-        </button>
-        <div class="track-num ${playing ? 'playing-bars' : ''}">
-          ${playing ? '<div class="bar"></div><div class="bar"></div><div class="bar"></div>' : String(i+1).padStart(2,'0')}
-        </div>
-      </div>
-    </div>`;
-  }).join('');
+const fmt = s => { if (!s || isNaN(s)) return '0:00'; return `${Math.floor(s/60)}:${String(Math.floor(s%60)).padStart(2,'0')}`; };
+
+// ─ PROGRESS DRAG ──────────────────────────────────────────────
+(function(){
+  const el = g$('plpt');
+  let drag = false;
+  const pos = e => {
+    const r = el.getBoundingClientRect();
+    const x = (e.touches ? e.touches[0].clientX : e.clientX) - r.left;
+    return Math.max(0, Math.min(1, x / r.width));
+  };
+  const go = e => { if (aud?.duration) aud.currentTime = pos(e) * aud.duration; };
+  el.addEventListener('mousedown',  e => { drag = true; el.classList.add('drag'); go(e); });
+  el.addEventListener('touchstart', e => { drag = true; el.classList.add('drag'); go(e); }, { passive: true });
+  document.addEventListener('mousemove',  e => { if (drag) go(e); });
+  document.addEventListener('touchmove',  e => { if (drag) go(e); }, { passive: true });
+  document.addEventListener('mouseup',  () => { drag = false; el.classList.remove('drag'); });
+  document.addEventListener('touchend', () => { drag = false; el.classList.remove('drag'); });
+})();
+
+g$('volr').addEventListener('input', e => { if (aud) aud.volume = parseFloat(e.target.value); });
+
+// ─ UPDATE BARS ────────────────────────────────────────────────
+function updBar(t) {
+  g$('bt').textContent = t.title;
+  g$('ba').textContent = t.performer;
+  g$('bar').classList.add('on');
+  g$('bcov').style.background = grad(t.id);
+  const bi = g$('bcimg'); bi.style.display = 'none'; bi.src = '';
+  updLikeUI(t.id); updBoxUI(t.id); setIcons(true);
+  if (covCache[t.id]) applyImg(t.id, covCache[t.id]);
+  else loadCov(t.id);
+}
+function updPl(t) {
+  g$('pltitle').textContent = t.title;
+  g$('plart').textContent   = t.performer;
+  g$('plbg').style.background = grad(t.id);
+  g$('plcfb').style.background = grad(t.id);
+  g$('plci').style.display = 'none';
+  g$('plpf').style.width = '0%';
+  g$('plc').textContent  = '0:00';
+  updLikeUI(t.id); updBoxUI(t.id); setIcons(true);
+  if (covCache[t.id]) applyImg(t.id, covCache[t.id]);
+  else loadCov(t.id);
 }
 
-function switchTab(tab, el) {
-  currentTab = tab;
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  el.classList.add('active');
-  const searchWrap = document.getElementById('search-wrap');
-  const title = document.getElementById('section-title');
-  if (tab === 'search') {
-    searchWrap.style.display = 'block'; title.style.display = 'none';
-    renderTracks(tracks); document.getElementById('search-input').focus();
-  } else {
-    searchWrap.style.display = 'none'; title.style.display = 'flex';
-  }
-  if (tab === 'new') { title.innerHTML = '🔥 НОВИНКИ <span>' + tracks.length + ' треков</span>'; renderTracks([...tracks]); }
-  else if (tab === 'top') { title.innerHTML = '⭐ ТОП <span>по лайкам</span>'; renderTracks([...tracks].sort((a,b) => b.likes - a.likes)); }
-  else if (tab === 'box') { title.innerHTML = '📦 МОЙ ЯЩИК <span>' + myBox.length + ' треков</span>'; renderTracks(tracks.filter(t => myBox.includes(t.id))); }
+function updLikeUI(id) {
+  const on = liked.has(id);
+  ['blk','pllk'].forEach(k => g$(k)?.classList.toggle('lk', on));
+}
+function updBoxUI(id) {
+  const on = boxed.has(id);
+  g$('plbx')?.classList.toggle('on', on);
+}
+function rerender() {
+  const ac = document.querySelector('.chip.on');
+  if (ac) tab(curTab, ac);
 }
 
-async function onSearch(val) {
-  if (!val.trim()) { renderTracks(tracks); return; }
-  const data = await apiFetch(`/tracks/search?q=${encodeURIComponent(val)}`);
-  if (data) renderTracks(data.tracks.map(t => ({ ...t, performer: t.performer || "Unknown", likes: 0, liked: false })));
-}
-
-function toggleLike(id) {
-  const track = tracks.find(t => t.id === id);
-  if (!track) return;
-  track.liked = !track.liked;
-  track.likes += track.liked ? 1 : -1;
-  refreshCurrentTab();
-  showToast(track.liked ? '❤️ Лайк поставлен!' : '🤍 Лайк убран');
+// ─ LIKE ───────────────────────────────────────────────────────
+async function like(id) {
+  if (!UID) { toast('⚠️ Войди через бота'); return; }
+  liked.has(id) ? liked.delete(id) : liked.add(id);
+  if (id === nowId) updLikeUI(id);
+  rerender();
+  toast(liked.has(id) ? '❤️ Лайк поставлен' : 'Лайк убран');
   if (tg) tg.HapticFeedback?.impactOccurred('medium');
+  apiFetch(`/users/${UID}/like/${id}`, 'POST');
 }
+function likeCur() { if (nowId) like(nowId); }
 
-function refreshCurrentTab() {
-  const tabs = document.querySelectorAll('.tab');
-  if (currentTab === 'new') switchTab('new', tabs[0]);
-  else if (currentTab === 'top') switchTab('top', tabs[1]);
-  else if (currentTab === 'box') switchTab('box', tabs[2]);
-  else renderTracks(tracks);
+// ─ BOX ─────────────────────────────────────────────────────────
+async function addBox(id) {
+  if (!UID) { toast('⚠️ Войди через бота'); return; }
+  if (boxed.has(id)) { toast('📦 Уже в ящике'); return; }
+  boxed.add(id);
+  if (id === nowId) updBoxUI(id);
+  rerender();
+  toast('📦 Добавлено в ящик');
+  if (tg) tg.HapticFeedback?.impactOccurred('light');
+  apiFetch(`/users/${UID}/box/${id}`, 'POST');
 }
+function boxCur() { if (nowId) addBox(nowId); }
 
-function showPage(page) {
-  currentPage = page;
-  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  const homeEl = document.getElementById('page-home');
-  const profileEl = document.getElementById('page-profile');
-  const tabsEl = document.getElementById('tabs');
-  const searchWrap = document.getElementById('search-wrap');
-  homeEl.classList.remove('active'); profileEl.classList.remove('active');
-  const navMap = { home:'nav-home', search:'nav-search', box:'nav-box', profile:'nav-profile' };
-  if (navMap[page]) document.getElementById(navMap[page])?.classList.add('active');
-  if (page === 'profile') {
-    profileEl.classList.add('active'); tabsEl.style.display = 'none'; searchWrap.style.display = 'none';
-    renderProfile();
+// ─ PLAYER ─────────────────────────────────────────────────────
+function openPl()  { if (nowId) g$('pl').classList.add('on'); }
+function closePl() { g$('pl').classList.remove('on'); }
+
+// ─ LYRICS ─────────────────────────────────────────────────────
+async function openLyr() {
+  if (!nowId) return;
+  const t = tracks.find(x => x.id === nowId);
+  g$('lyrt').textContent = t?.title || '—';
+  g$('lyra').textContent = t?.performer || '';
+  g$('lyrtext').innerHTML = `<div class="lyrph">
+    <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+    <strong>Загрузка...</strong></div>`;
+  g$('lyr').classList.add('on');
+  const d = await apiFetch(`/tracks/${nowId}/lyrics`);
+  const el = g$('lyrtext');
+  if (d?.lyrics?.trim()) {
+    el.textContent = d.lyrics;
   } else {
-    homeEl.classList.add('active'); tabsEl.style.display = 'flex';
-    if (page === 'search') { switchTab('search', document.querySelectorAll('.tab')[3]); }
-    else if (page === 'box') { switchTab('box', document.querySelectorAll('.tab')[2]); }
-    else {
-      searchWrap.style.display = 'none';
-      const newTab = document.querySelectorAll('.tab')[0];
-      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-      newTab.classList.add('active'); currentTab = 'new';
-      document.getElementById('section-title').style.display = 'flex';
-      document.getElementById('section-title').innerHTML = '🔥 НОВИНКИ <span>' + tracks.length + ' треков</span>';
-      renderTracks([...tracks]);
+    el.innerHTML = `<div class="lyrph">
+      <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      <strong>Текст не добавлен</strong>
+      <small>Добавь через бота при загрузке трека</small></div>`;
+  }
+}
+function closeLyr() { g$('lyr').classList.remove('on'); }
+
+// ─ PAGES ──────────────────────────────────────────────────────
+function nav(p) {
+  g$('phome').style.display = p === 'profile' ? 'none' : 'block';
+  g$('ppro').style.display  = p === 'profile' ? 'block' : 'none';
+  ['nih','nis','nib','nip'].forEach(id => g$(id).classList.remove('on'));
+  const nm = { home:'nih', search:'nis', box:'nib', profile:'nip' };
+  if (nm[p]) g$(nm[p]).classList.add('on');
+  if (p === 'profile') renderPro();
+  else if (p === 'search') tab('search', document.querySelectorAll('.chip')[3]);
+  else if (p === 'box')    tab('box',    document.querySelectorAll('.chip')[2]);
+  else {
+    g$('sw').style.display   = 'none';
+    g$('slbl').style.display = 'flex';
+    document.querySelectorAll('.chip').forEach(c => c.classList.remove('on'));
+    document.querySelectorAll('.chip')[0].classList.add('on');
+    curTab = 'new';
+    g$('st').textContent = 'НОВИНКИ';
+    g$('sc').textContent = tracks.length + ' треков';
+    render([...tracks]);
+  }
+}
+
+// ─ PROFILE ────────────────────────────────────────────────────
+async function renderPro() {
+  if (TGU) {
+    const name = TGU.first_name + (TGU.last_name ? ' ' + TGU.last_name : '');
+    g$('pname').textContent = name;
+    g$('phnd').textContent  = TGU.username ? '@' + TGU.username : 'TrackBox';
+    const ini = (name[0] || '?').toUpperCase();
+    g$('ppic').textContent = ini;
+    g$('ava').textContent  = ini;
+  }
+  if (UID) {
+    const d = await apiFetch(`/users/${UID}`);
+    if (d && !d.detail) {
+      g$('pls').textContent = d.listens ?? 0;
+      g$('plk').textContent = d.likes   ?? 0;
+      g$('pbx').textContent = d.box     ?? 0;
+      renderAch(d.achievements || []);
+      return;
     }
   }
+  g$('pls').textContent = '—';
+  g$('plk').textContent = liked.size;
+  g$('pbx').textContent = boxed.size;
+  renderAch([]);
 }
 
-function renderProfile() {
-  if (TG_USER) {
-    document.getElementById('p-name').textContent = TG_USER.first_name + (TG_USER.last_name ? ' ' + TG_USER.last_name : '');
-    document.getElementById('p-handle').textContent = TG_USER.username ? '@' + TG_USER.username : 'TrackBox User';
-  }
-  document.getElementById('p-listens').textContent = tracks.length;
-  document.getElementById('p-likes').textContent = tracks.filter(t => t.liked).length;
-  document.getElementById('p-box').textContent = myBox.length;
-  document.getElementById('p-days').textContent = '—';
-  const grid = document.getElementById('ach-grid');
-  grid.innerHTML = ACHIEVEMENTS.map(a => `
-    <div class="ach-card locked">
-      <div class="ach-emoji">${a.emoji}</div>
-      <div class="ach-name">${a.name}</div>
-      <div class="ach-desc">${a.desc}</div>
-      <div class="ach-badge">🔒 Заблокировано</div>
+function renderAch(ids) {
+  const s = new Set(ids);
+  g$('achg').innerHTML = ACH.map(a => `
+    <div class="ac ${s.has(a.id)?'y':'n'}">
+      <div class="ace">${a.e}</div>
+      <div class="acn">${a.n}</div>
+      <div class="acd">${a.d}</div>
+      <div class="acs">${s.has(a.id) ? '✓ Получено' : '🔒 Заблокировано'}</div>
     </div>`).join('');
 }
 
-let toastTimer;
-function showToast(msg) {
-  const el = document.getElementById('toast');
-  el.textContent = msg; el.classList.add('show');
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => el.classList.remove('show'), 2500);
+// ─ TOAST ──────────────────────────────────────────────────────
+let _tt;
+function toast(msg) {
+  const el = g$('toast');
+  el.textContent = msg; el.classList.add('on');
+  clearTimeout(_tt); _tt = setTimeout(() => el.classList.remove('on'), 2500);
 }
 
-document.addEventListener('DOMContentLoaded', loadTracks);
-<\/script>
+// ─ UTILS ──────────────────────────────────────────────────────
+const g$ = id => document.getElementById(id);
+
+// ─ INIT ───────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', boot);
+</script>
 </body>
 </html>
